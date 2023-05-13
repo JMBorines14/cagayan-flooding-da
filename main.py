@@ -1,4 +1,5 @@
 from math import sqrt
+from extract_data import extract_coords, extract_height
 import numpy as np
 import pandas as pd
 
@@ -69,10 +70,16 @@ def update_D(L, D, I):
     D = D - ibabawas + idadagdag
     return D, I
 
-def add_to_file(S, D):
-    initial_data = []
+def compile_data(coordinates, D, m, n, time):
+    to_return = []
 
-def update_R():
+    for i in range(m):
+        for j in range(n):
+            to_return.append([time, coordinates[i][j][0], coordinates[i][j][1], D[i][j]])
+    
+    return to_return
+
+def update_R(R):
     pass
 
 def simulation():
@@ -85,6 +92,7 @@ n = 10
 #get surface matrix
 S = np.array([[0. for _ in range(m)] for _ in range(n)]) #surface
 R = np.array([[0. for _ in range(m)] for _ in range(n)]) #rainfall
+
 I = np.array([[0. for _ in range(m)] for _ in range(n)]) #I_total
 D = np.array([[0. for _ in range(m)] for _ in range(n)])
 
@@ -96,6 +104,6 @@ for i in range(m):
         initial_data.append([S[i][j]])
 
 L = S
-R = D
+D = R
 
 #finalize csv file
