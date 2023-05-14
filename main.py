@@ -1,7 +1,8 @@
-from math import sqrt
-from extract_data import extract_coords, extract_height
+from osgeo import gdal
+from camodel import update_D
 import numpy as np
-import pandas as pd
+import netCDF4 as nc
+import sys
 
 #parameters
 g = 9.81
@@ -12,98 +13,67 @@ A = 1
 delta_t = 600
 delta_e = 1
 
-#define the Cellular Automata class CACell
-def update_D(L, D, I):
-    ibabawas = [[0 for _ in range(len(L[0]))] for _ in range(len(L))]
-    idadagdag = [[0 for _ in range(len(L[0]))] for _ in range(len(L))]
-
-    for i in range(len(L)):
-        for j in range(len(L[0])):
-            central = L[i][j]
-            neighbor_directory = dict()
-
-            if (i - 1) >= 0:
-                neighbor_directory["north"] = L[i-1][j]
-            if (i + 1) < len(L):
-                neighbor_directory["south"] = L[i+1][j]
-            if (j + 1) < len(L[0]):
-                neighbor_directory["east"] = L[i][j+1]
-            if (j - 1) >= 0:
-                neighbor_directory["west"] = L[i][j-1]
-            
-            delta_L = {i: central - neighbor_directory[i] for i in neighbor_directory}
-            print(f'At i = {i} and j = {j}, delta_L is {delta_L}')
-            delta_V = {i: A * max(delta_L[i], 0) for i in delta_L}
-            print(f'At i = {i} and j = {j}, delta_V is {delta_V}')
-            
-            to_compute = [delta_V[i] for i in delta_V if delta_V[i] > tol]
-            if len(to_compute) == 0:
-                continue
-
-            V_min = min(to_compute)
-
-            delta_Vs = [delta_V[i] for i in delta_V]
-            V_total = sum(delta_Vs)
-
-            weights = {i: delta_V[i]/(V_total + V_min) for i in delta_V}
-            weights["central"] = V_min/(V_total + V_min)
-            max_weight = max([weights[i] for i in weights])
-            v_M = min(D[i][j] * g, (1/man) * (D[i][j]**(2/3)) * sqrt(max_weight/delta_X))
-            i_M = v_M * D[i][j] * delta_t * delta_e
-
-            to_distribute = min(D[i][j] * A, i_M/max_weight, V_min + I[i][j])
-            I[i][j] = to_distribute
-
-            I_next = {i: weights[i] * to_distribute for i in weights if i != "central"}
-            ibabawas[i][j] = sum([I_next[i] for i in I_next])
-            print(f'At i = {i} and j = {j}, I_next is {I_next} while D[i][j] - ibabawas is {D[i][j] - ibabawas[i][j]}')
-
-            if "north" in I_next:
-                idadagdag[i-1][j] += I_next["north"]
-            if "south" in I_next:
-                idadagdag[i+1][j] += I_next["south"]
-            if "east" in I_next:
-                idadagdag[i][j+1] += I_next["east"]
-            if "west" in I_next:
-                idadagdag[i][j-1] += I_next["west"]
-    
-    D = D - ibabawas + idadagdag
-    return D, I
-
-def compile_data(coordinates, D, m, n, time):
-    to_return = []
-
-    for i in range(m):
-        for j in range(n):
-            to_return.append([time, coordinates[i][j][0], coordinates[i][j][1], D[i][j]])
-    
-    return to_return
-
 def update_R(R):
     pass
 
-def simulation():
-    pass
+def write_to_output(time, C, D, depth_var, m, n):
+    for i in range(m):
+        for j in range(n):
+            depth_var[time, C[i][j][0], C[i][j][1]] = D[i][j]
 
-#get coordinate matrix (???)
-m = 10
-n = 10
+def simulation(C, L, D, I, depth_var, m, n):
+    for time in range(10):
+        #update R by calling update_R
+        #update D
+        D, I = update_D(L, D, I)
+        write_to_output(time, C, D, depth_var, m, n)
+        L = S + D
 
-#get surface matrix
-S = np.array([[0. for _ in range(m)] for _ in range(n)]) #surface
+#initialize the dataset
+dataset = gdal.Open(sys.argv[1])
+m, n, band = dataset.RasterXSize, dataset.RasterYSize, dataset.RasterCount
+xoff, a, b, yoff, d, e = dataset.GetGeoTransform()
+
+#initialize output file and dimensions
+output_dataset = nc.DataSet('output.nc', 'w', format = 'NETCDF4')
+time = output_dataset.createDimension('time', None)
+lat = output_dataset.createDimension('lat', m)
+lon = output_dataset.createDimension('lon', n)
+
+times = output_dataset.createVariable('time', 'f8', ('time',))
+lats = output_dataset.createVariable('lat', 'f4', ('lat',))
+lons = output_dataset.createVariable('lon', 'f4', ('lon',))
+depth = output_dataset.createVariable('depth', 'f4', ('time', 'lat', 'lon',))
+
+def pixeltocoord(x, y):
+    xp = a*x + b*y + xoff
+    yp = d*x + e*y + yoff
+    return (xp, yp)
+
+def extract_coords(row, col):
+    C = [[0] * col] * row
+
+    for i in range(row):
+        for j in range(col):
+            C[i][j] = pixeltocoord(i, j)
+    
+    return C
+
+#get surface and coordinate matrix
+C = extract_coords(m, n) #coordinate matrix
+data1 = dataset.GetRasterBand(1).ReadAsArray()
+S = np.array([list(i) for i in list(data1)])
+
+#initialize rainfall matrix
 R = np.array([[0. for _ in range(m)] for _ in range(n)]) #rainfall
 
+#define the I and D matrices
 I = np.array([[0. for _ in range(m)] for _ in range(n)]) #I_total
 D = np.array([[0. for _ in range(m)] for _ in range(n)])
-
-initial_data = []
-
-for i in range(m):
-    for j in range(n):
-        #append the coordinates plus 0 depth
-        initial_data.append([S[i][j]])
 
 L = S
 D = R
 
-#finalize csv file
+#call to simulation function
+
+output_dataset.close()
