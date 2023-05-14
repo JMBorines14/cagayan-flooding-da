@@ -13,9 +13,6 @@ A = 1
 delta_t = 600
 delta_e = 1
 
-def update_R(R):
-    pass
-
 def write_to_output(time, C, D, depth_var, m, n):
     for i in range(m):
         for j in range(n):
@@ -65,12 +62,10 @@ data1 = dataset.GetRasterBand(1).ReadAsArray()
 S = np.array([list(i) for i in list(data1)])
 
 #initialize rainfall matrix
-R = np.array([[0. for _ in range(m)] for _ in range(n)]) #rainfall
+R = np.array([[0 for _ in range(m)] for _ in range(n)]) #rainfall
 
 #define the I and D matrices
-I = np.array([[0. for _ in range(m)] for _ in range(n)]) #I_total
-D = np.array([[0. for _ in range(m)] for _ in range(n)])
-
+I = np.array([[0 for _ in range(m)] for _ in range(n)], dtype='f4') #I_total
 L = S
 D = R
 
