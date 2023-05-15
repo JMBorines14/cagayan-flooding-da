@@ -1,4 +1,5 @@
 from math import sqrt
+import numpy as np
 
 g = 9.81
 man = 0.03
@@ -9,8 +10,8 @@ delta_t = 600
 delta_e = 1
 
 def update_D(L, D, I):
-    ibabawas = [[0 for _ in range(len(L[0]))] for _ in range(len(L))]
-    idadagdag = [[0 for _ in range(len(L[0]))] for _ in range(len(L))]
+    ibabawas = np.array([[0. for _ in range(len(L[0]))] for _ in range(len(L))])
+    idadagdag = np.array([[0. for _ in range(len(L[0]))] for _ in range(len(L))])
 
     for i in range(len(L)):
         for j in range(len(L[0])):
@@ -27,9 +28,9 @@ def update_D(L, D, I):
                 neighbor_directory["west"] = L[i][j-1]
             
             delta_L = {i: central - neighbor_directory[i] for i in neighbor_directory}
-            print(f'At i = {i} and j = {j}, delta_L is {delta_L}')
+            #print(f'At i = {i} and j = {j}, delta_L is {delta_L}')
             delta_V = {i: A * max(delta_L[i], 0) for i in delta_L}
-            print(f'At i = {i} and j = {j}, delta_V is {delta_V}')
+            #print(f'At i = {i} and j = {j}, delta_V is {delta_V}')
             
             to_compute = [delta_V[i] for i in delta_V if delta_V[i] > tol]
             if len(to_compute) == 0:
@@ -51,7 +52,7 @@ def update_D(L, D, I):
 
             I_next = {i: weights[i] * to_distribute for i in weights if i != "central"}
             ibabawas[i][j] = sum([I_next[i] for i in I_next])
-            print(f'At i = {i} and j = {j}, I_next is {I_next} while D[i][j] - ibabawas is {D[i][j] - ibabawas[i][j]}')
+            #print(f'At i = {i} and j = {j}, I_next is {I_next} while D[i][j] - ibabawas is {D[i][j] - ibabawas[i][j]}')
 
             if "north" in I_next:
                 idadagdag[i-1][j] += I_next["north"]

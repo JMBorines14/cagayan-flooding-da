@@ -19,7 +19,7 @@ def write_to_output(time, C, D, depth_var, m, n):
             depth_var[time, C[i][j][0], C[i][j][1]] = D[i][j]
 
 def simulation(C, L, D, I, depth_var, m, n):
-    for time in range(10):
+    for time in range(1):
         #update R by calling update_R
         #update D
         D, I = update_D(L, D, I)
@@ -32,7 +32,7 @@ m, n, band = dataset.RasterXSize, dataset.RasterYSize, dataset.RasterCount
 xoff, a, b, yoff, d, e = dataset.GetGeoTransform()
 
 #initialize output file and dimensions
-output_dataset = nc.DataSet('output.nc', 'w', format = 'NETCDF4')
+output_dataset = nc.Dataset('output.nc', 'w', format = 'NETCDF4')
 time = output_dataset.createDimension('time', None)
 lat = output_dataset.createDimension('lat', m)
 lon = output_dataset.createDimension('lon', n)
@@ -60,9 +60,11 @@ def extract_coords(row, col):
 C = extract_coords(m, n) #coordinate matrix
 data1 = dataset.GetRasterBand(1).ReadAsArray()
 S = np.array([list(i) for i in list(data1)])
+dataset = None
 
 #initialize rainfall matrix
 R = np.array([[0 for _ in range(m)] for _ in range(n)]) #rainfall
+R[4093][4093] = 100
 
 #define the I and D matrices
 I = np.array([[0 for _ in range(m)] for _ in range(n)], dtype='f4') #I_total
@@ -70,5 +72,5 @@ L = S
 D = R
 
 #call to simulation function
-
+simulation(C, L, D, I, depth, m, n)
 output_dataset.close()
