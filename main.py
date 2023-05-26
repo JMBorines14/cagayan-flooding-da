@@ -4,15 +4,6 @@ import numpy as np
 import netCDF4 as nc
 import sys
 
-#parameters
-g = 9.81
-man = 0.03
-delta_X = 1
-tol = 0
-A = 1
-delta_t = 600
-delta_e = 1
-
 def write_to_output(time, C, D, depth_var, m, n):
     for i in range(m):
         for j in range(n):
@@ -22,13 +13,16 @@ def simulation(C, L, D, I, depth_var, m, n):
     for time in range(1):
         #update R by calling update_R
         #update D
-        D, I = update_D(L, D, I)
+        I, ibabawas, idadagdag = update_D(L, D, I, m, n)
+        D = D - ibabawas + idadagdag
+
         write_to_output(time, C, D, depth_var, m, n)
         L = S + D
 
 #initialize the dataset
 dataset = gdal.Open(sys.argv[1])
-m, n, band = dataset.RasterXSize, dataset.RasterYSize, dataset.RasterCount
+n, m, band = dataset.RasterXSize, dataset.RasterYSize, dataset.RasterCount
+print(f'The size is {m} x {n}')
 xoff, a, b, yoff, d, e = dataset.GetGeoTransform()
 
 #initialize output file and dimensions
@@ -63,11 +57,11 @@ S = np.array([list(i) for i in list(data1)])
 dataset = None
 
 #initialize rainfall matrix
-R = np.array([[0 for _ in range(m)] for _ in range(n)]) #rainfall
+R = np.zeros((m,n)) #rainfall
 R[4093][4093] = 100
 
 #define the I and D matrices
-I = np.array([[0 for _ in range(m)] for _ in range(n)], dtype='f4') #I_total
+I = np.zeros((m,n)) #I_total
 L = S
 D = R
 
