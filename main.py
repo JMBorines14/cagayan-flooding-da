@@ -4,19 +4,20 @@ import numpy as np
 import netCDF4 as nc
 import sys
 
-def write_to_output(time, C, D, depth_var, m, n):
-    for i in range(m):
-        for j in range(n):
-            depth_var[time, C[i][j][0], C[i][j][1]] = D[i][j]
+def x_coord(idx):
+    return a*idx + b*idx + xoff
 
-def simulation(C, L, D, I, depth_var, m, n):
+def y_coord(idx):
+    return d*idx + e*idx + yoff
+
+def simulation(L, D, I, depth_var, m, n):
     for time in range(1):
         #update R by calling update_R
         #update D
         I, ibabawas, idadagdag = update_D(L, D, I, m, n)
         D = D - ibabawas + idadagdag
 
-        write_to_output(time, C, D, depth_var, m, n)
+        depth_var[time, :, :] = D
         L = S + D
 
 #initialize the dataset
@@ -36,22 +37,11 @@ lats = output_dataset.createVariable('lat', 'f4', ('lat',))
 lons = output_dataset.createVariable('lon', 'f4', ('lon',))
 depth = output_dataset.createVariable('depth', 'f4', ('time', 'lat', 'lon',))
 
-def pixeltocoord(x, y):
-    xp = a*x + b*y + xoff
-    yp = d*x + e*y + yoff
-    return (xp, yp)
+#output latitudes and longitudes to the dataset
+lats[:] = np.array([x_coord(k) for k in m])
+lons[:] = np.array([y_coord(k) for k in n])
 
-def extract_coords(row, col):
-    C = [[0] * col] * row
-
-    for i in range(row):
-        for j in range(col):
-            C[i][j] = pixeltocoord(i, j)
-    
-    return C
-
-#get surface and coordinate matrix
-C = extract_coords(m, n) #coordinate matrix
+#get surface matrix
 data1 = dataset.GetRasterBand(1).ReadAsArray()
 S = np.array([list(i) for i in list(data1)])
 dataset = None
@@ -66,5 +56,5 @@ L = S
 D = R
 
 #call to simulation function
-simulation(C, L, D, I, depth, m, n)
+#simulation(C, L, D, I, depth, m, n)
 output_dataset.close()
