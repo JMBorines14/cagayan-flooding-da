@@ -47,6 +47,11 @@ if __name__ == "__main__":
     depth = output_dataset.createVariable('depth', 'f4', ('time', 'lat', 'lon',))
     depth.grid_mapping = 'phlvfour'
 
+    #create a NetCDF Variable
+    phlvfour = output_dataset.createVariable('phlvfour', 'c')
+    phlvfour.spatial_ref = dataset.GetProjectionRef()
+    phlvfour.GeoTransform = " ".join(str(x) for x in dataset.GetGeoTransform())
+
     #output latitudes and longitudes to the dataset
     lats[:] = np.array([x_coord(k) for k in range(m)])
     lons[:] = np.array([y_coord(k) for k in range(n)])
@@ -68,8 +73,4 @@ if __name__ == "__main__":
     #call to simulation function
     simulation(L, D, I, depth, m, n)
 
-    #create a NetCDF Variable
-    phlvfour = output_dataset.createVariable('phlvfour', 'c')
-    phlvfour.spatial_ref = dataset.GetProjectionRef()
-    phlvfour.GeoTransform = " ".join(str(x) for x in dataset.GetGeoTransform())
     output_dataset.close()
