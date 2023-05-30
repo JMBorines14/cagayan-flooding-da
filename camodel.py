@@ -12,13 +12,9 @@ delta_e = 1
 def update_D(L, D, I, m, n):
     ibabawas = np.zeros((m, n))
     idadagdag = np.zeros((m, n))
-    print(L.shape, D.shape, I.shape)
 
     for i in range(m):
         for j in range(n):
-            if ((i * m) + j) % 1000000 == 0:
-                print(f'I am at cell[{i}][{j}]')
-            
             central = L[i][j]
             neighbor_directory = dict()
 

@@ -19,15 +19,16 @@ def simulation(L, D, I, depth_var, m, n):
     depth_var => netcdf variable where output will be added
     m, n => dimensions of the matrices L, D, and I"""
 
-    R = np.zeros((m, n)) #initialize the rainfall function
+    D += R
+
     for time in range(1):
-        D += R
         I, ibabawas, idadagdag = update_D(L, D, I, m, n)
         D = D - ibabawas + idadagdag
 
         depth_var[time, :, :] = D
-        L = S + D
         R = np.zeros((m, n)) #update this to the rainfall function
+        D += R
+        L = S + D
 
 if __name__ == "__main__":
     #open the TIFF file
@@ -74,3 +75,4 @@ if __name__ == "__main__":
     simulation(L, D, I, depth, m, n)
 
     output_dataset.close()
+    print("I am done with the simulation.")
