@@ -10,26 +10,6 @@ def x_coord(idx):
 def y_coord(idx):
     return d*idx + e*idx + yoff
 
-def simulation(L, D, I, depth_var, m, n):
-    """Main driver function for the simulation of the model
-    to the input dataset. This function takes the following parameters:
-    L => Matrix corresponding to the sum of S and D
-    D => Depth matrix
-    I => I_total matrix
-    depth_var => netcdf variable where output will be added
-    m, n => dimensions of the matrices L, D, and I"""
-
-    D += R
-
-    for time in range(1):
-        I, ibabawas, idadagdag = update_D(L, D, I, m, n)
-        D = D - ibabawas + idadagdag
-
-        depth_var[time, :, :] = D
-        R = np.zeros((m, n)) #update this to the rainfall function
-        D += R
-        L = S + D
-
 if __name__ == "__main__":
     #open the TIFF file
     dataset = gdal.Open(sys.argv[1])
@@ -48,7 +28,6 @@ if __name__ == "__main__":
     depth = output_dataset.createVariable('depth', 'f4', ('time', 'lat', 'lon',))
     depth.grid_mapping = 'phlvfour'
 
-    #create a NetCDF Variable
     phlvfour = output_dataset.createVariable('phlvfour', 'c')
     phlvfour.spatial_ref = dataset.GetProjectionRef()
     phlvfour.GeoTransform = " ".join(str(x) for x in dataset.GetGeoTransform())
@@ -57,22 +36,30 @@ if __name__ == "__main__":
     lats[:] = np.array([x_coord(k) for k in range(m)])
     lons[:] = np.array([y_coord(k) for k in range(n)])
 
-    #get surface matrix
     data1 = dataset.GetRasterBand(1).ReadAsArray()
-    S = np.array([list(i) for i in list(data1)])
     dataset = None
 
-    #initialize rainfall matrix
+    #define the surface and depth matrices
+    S = np.array([list(i) for i in list(data1)])
+    I = np.zeros((m,n)) #I_total
+    D = np.zeros((m,n))
+
+    #initialize the rainfall distribution matrix
     R = np.zeros((m,n)) #rainfall
     R[4093][4093] = 100
 
-    #define the I and D matrices
-    I = np.zeros((m,n)) #I_total
-    D = np.zeros((m,n))
-    L = S + D
+    D += R #update the depth
+    L = S + D #initialize L as the sum of S and D
 
-    #call to simulation function
-    simulation(L, D, I, depth, m, n)
+    for time in range(1):
+        I, ibabawas, idadagdag = update_D(L, D, I, m, n)
+        D = D - ibabawas + idadagdag
 
+        depth[time, :, :] = D
+        print(depth[0, 4093, 4093], depth[0, 4093, 4094], depth[0, 4093, 4092], depth[0, 4092,4093], depth[0, 4094, 4093])
+        R = np.zeros((m, n)) #update this to the rainfall function
+        D += R
+        L = S + D
+    
     output_dataset.close()
     print("I am done with the simulation.")
