@@ -46,7 +46,8 @@ if __name__ == "__main__":
 
     #initialize the rainfall distribution matrix
     R = np.zeros((m,n)) #rainfall
-    R[4093][4093] = 100
+    R[m//2][n//2] = 100
+    R[m//3][n//3] = 100
 
     D += R #update the depth
     L = S + D #initialize L as the sum of S and D
@@ -56,7 +57,6 @@ if __name__ == "__main__":
         D = D - ibabawas + idadagdag
 
         depth[time, :, :] = D
-        print(depth[0, 4093, 4093], depth[0, 4093, 4094], depth[0, 4093, 4092], depth[0, 4092,4093], depth[0, 4094, 4093])
         R = np.zeros((m, n)) #update this to the rainfall function
         D += R
         L = S + D
