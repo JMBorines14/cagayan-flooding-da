@@ -18,12 +18,24 @@ def x_coord(idx):
 def y_coord(idx):
     return d*idx + e*idx + yoff
 
+def time_range_list(start_date, end_date, mins):
+    time_list = []
+    curr_date = start_date
+    while curr_date <= end_date:
+        time_list.append(curr_date)
+        curr_date += timedelta(minutes=mins)
+    return time_list
+
 
 if __name__ == "__main__":
     # command line arguments
-    demfile = sys.argv[1]   # DEM TIFF
-    raindir = sys.argv[2]   # directory of rainfall TIFFs
-    mins = int(sys.argv[3])  # no. of mins in each timestep
+    demfile = sys.argv[1]       # DEM TIFF
+    raindir = sys.argv[2]       # directory of rainfall TIFFs
+    mins = int(sys.argv[3])     # no. of mins in each timestep
+
+    if 180 % mins != 0:
+        print("Number of minutes should have 180 as a multiple.")
+        quit()
 
     dataset = gdal.Open(demfile)
     n, m, band = dataset.RasterXSize, dataset.RasterYSize, dataset.RasterCount
@@ -46,9 +58,10 @@ if __name__ == "__main__":
     phlvfour.spatial_ref = dataset.GetProjectionRef()
     phlvfour.GeoTransform = " ".join(str(x) for x in dataset.GetGeoTransform())
 
-    utc_now = datetime.utcnow()
-    time_list = [utc_now + timedelta(hours=1*step) for step in range(100)]
-    print(time_list[0], time_list[-1])
+    start_date = datetime(2020, 11, 7, 23, 0, 0)
+    end_date = datetime(2020, 11, 14, 23, 0, 0)
+    time_list = time_range_list(start_date, end_date, mins)
+    print(time_list[0], time_list[-1], len(time_list))
     trans_time = date2num(
         time_list, units="hours since 0001-01-01 00:00:00.0", calendar="gregorian")
 
@@ -65,10 +78,6 @@ if __name__ == "__main__":
     I = np.zeros((m, n))  # I_total
     D = np.zeros((m, n))
 
-    # # initialize the rainfall distribution matrix
-    # R = np.zeros((m, n))  # rainfall
-    # R[m//2][n//2] = 100
-    # R[m//3][n//3] = 150
 
     R = rainfall.generate_rainfall_matrix(m, n, mins, raindir)
 
@@ -77,7 +86,7 @@ if __name__ == "__main__":
 
     print("Number of time steps: " + str(R.shape[0]))
 
-    for time in range(10):
+    for time in range(len(time_list)):
         print(f'I am at time step {time}')
         I, ibabawas, idadagdag = update_D(L, D, I, m, n)
         D = D - ibabawas + idadagdag
