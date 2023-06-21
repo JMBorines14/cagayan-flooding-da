@@ -11,11 +11,11 @@ from netCDF4 import date2num
 from netCDF4 import Dataset
 
 man = 0.03
-delta_X = 1 #distance
+delta_X = 90 #distance
 tol = 0
-A = 1 #area of the cell
+A = 90*90 #area of the cell
 delta_t = 1 #delta_t is timestep
-delta_e = 1 #length of the edge of the cell
+delta_e = 90 #length of the edge of the cell
 
 def x_coord(idx):
     return a*idx + b*idx + xoff
