@@ -2,14 +2,8 @@ from math import sqrt
 import numpy as np
 
 g = 9.81
-man = 0.03
-delta_X = 1
-tol = 0
-A = 1
-delta_t = 1
-delta_e = 1
 
-def update_D(L, D, I, m, n):
+def update_D(L, D, I, m, n, man, delta_X, tol, A, delta_t, delta_e):
     ibabawas = np.zeros((m, n))
     idadagdag = np.zeros((m, n))
 

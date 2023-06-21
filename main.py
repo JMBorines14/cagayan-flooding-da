@@ -10,10 +10,15 @@ from datetime import timedelta
 from netCDF4 import date2num
 from netCDF4 import Dataset
 
+man = 0.03
+delta_X = 1 #distance
+tol = 0
+A = 1 #area of the cell
+delta_t = 1 #delta_t is timestep
+delta_e = 1 #length of the edge of the cell
 
 def x_coord(idx):
     return a*idx + b*idx + xoff
-
 
 def y_coord(idx):
     return d*idx + e*idx + yoff
@@ -32,6 +37,7 @@ if __name__ == "__main__":
     demfile = sys.argv[1]       # DEM TIFF
     raindir = sys.argv[2]       # directory of rainfall TIFFs
     mins = int(sys.argv[3])     # no. of mins in each timestep
+    delta_t = mins * 60
 
     if 180 % mins != 0:
         print("Number of minutes should have 180 as a multiple.")
@@ -88,8 +94,8 @@ if __name__ == "__main__":
 
     for time in range(len(time_list)):
         print(f'I am at time step {time}')
-        I, ibabawas, idadagdag = update_D(L, D, I, m, n)
-        D = D - ibabawas + idadagdag
+        I, ibabawas, idadagdag = update_D(L, D, I, m, n, man, delta_X, tol, A, delta_t, delta_e)
+        D = D - (ibabawas/A) + (idadagdag/A)
 
         depth[time, :, :] = D
         D += R[time, :, :]
