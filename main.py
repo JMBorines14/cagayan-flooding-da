@@ -86,11 +86,13 @@ if __name__ == "__main__":
 
 
     R = rainfall.generate_rainfall_matrix(m, n, mins, raindir)
+    R += rainfall.dam_matrix()
 
     D += R[0, :, :]  # update the depth
     L = S + D  # initialize L as the sum of S and D
 
     print("Number of time steps: " + str(R.shape[0]))
+    print(lats[0][0], longs[0][0])
 
     for time in range(len(time_list)):
         print(f'I am at time step {time}')

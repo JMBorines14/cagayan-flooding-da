@@ -1,5 +1,6 @@
 from osgeo import gdal
 from osgeo import ogr
+from datetime import datetime
 import os
 from pathlib import Path
 import numpy as np
@@ -25,6 +26,9 @@ def generate_rainfall_matrix(m, n, mins, directory):
               str(timestep*(int(180/mins))))
 
         R[timestep*(int(180/mins)), :, :] = np.array([list(i)
-                                                     for i in list(rainfall)])
+                                                     for i in list(rainfall)])/1000
 
     return R
+
+def dam_matrix(lats, lons, time_list):
+    release1 = datetime(2020, 11, 9)

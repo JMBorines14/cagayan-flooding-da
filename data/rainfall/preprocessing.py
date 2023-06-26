@@ -4,6 +4,8 @@ import pandas as pd
 import geopandas
 from shapely.geometry import Point
 from pathlib import Path
+from osgeo import gdal
+from osgeo import ogr
 
 data = pd.read_csv("S-042023-055_rainfall.csv")
 data = data.fillna(0)   # Fill NaN values with 0s
