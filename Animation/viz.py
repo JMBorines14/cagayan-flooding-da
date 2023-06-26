@@ -2,10 +2,10 @@ import datetime
 
 #INPUT START AND END DATE/TIME
 #FOR DATE/TIME USED SINGLE DIGIT FOR SINGLE NUMBER (i.e 4 NOT 04)
-start_date='1948:1:1' #'yyyy:m:d' 
-end_date='2021:2:28'
-start_time='0:0:0' #'h:m:s'
-end_time='0:0:0'
+start_date='2020:11:08' #'yyyy:m:d' 
+end_date='2020:11:14'
+start_time='2:0:0' #'h:m:s'
+end_time='23:0:0'
 
 #PARSING INPUT DATE/TIME
 date_time=[start_date,start_time,end_date,end_time]
@@ -27,19 +27,31 @@ def set_raster_renderer_to_singleband(layer: QgsRasterLayer, band: int = 1) -> N
     """
     # https://gis.stackexchange.com/a/377631/123927 and https://gis.stackexchange.com/a/157573/123927
     provider: QgsRasterDataProvider = layer.dataProvider()
-    renderer: QgsSingleBandGrayRenderer = QgsSingleBandGrayRenderer(layer.dataProvider(), band)
+    #renderer: QgsSingleBandGrayRenderer = QgsSingleBandGrayRenderer(layer.dataProvider(), band)
 
     stats: QgsRasterBandStats = provider.bandStatistics(band, QgsRasterBandStats.All, layer.extent(), 0)
     min_val = max(stats.minimumValue, 0)
     max_val = max(stats.maximumValue, 0)
 
-    enhancement = QgsContrastEnhancement(renderer.dataType(band))
-    contrast_enhancement = QgsContrastEnhancement.StretchToMinimumMaximum
-    enhancement.setContrastEnhancementAlgorithm(contrast_enhancement, True)
-    enhancement.setMinimumValue(min_val)
-    enhancement.setMaximumValue(max_val)
+    # enhancement = QgsContrastEnhancement(renderer.dataType(band))
+    # contrast_enhancement = QgsContrastEnhancement.StretchToMinimumMaximum
+    # enhancement.setContrastEnhancementAlgorithm(contrast_enhancement, True)
+    # enhancement.setMinimumValue(min_val)
+    # enhancement.setMaximumValue(max_val)
+
+    fcn = QgsColorRampShader(minimumValue = min_val, maximumValue = max_val)
+    fcn.setColorRampType(QgsColorRampShader.Interpolated)
+    lst = [ QgsColorRampShader.ColorRampItem(min_val, QColor(255,0,0,0)), \
+    QgsColorRampShader.ColorRampItem(max_val, QColor(255,0,0)) ]
+    fcn.setColorRampItemList(lst)
+    
+    shader = QgsRasterShader()
+    shader.setRasterShaderFunction(fcn)
+
+    renderer: QgsSingleBandPseudoColorRenderer  = QgsSingleBandPseudoColorRenderer(layer.dataProvider(), band, shader)
+
     layer.setRenderer(renderer)
-    layer.renderer().setContrastEnhancement(enhancement)
+    #layer.renderer().setContrastEnhancement(enhancement)
     layer.triggerRepaint()
     
 def set_band_based_on_range(layer: QgsRasterLayer, t_range: QgsDateTimeRange) -> int:
