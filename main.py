@@ -89,18 +89,18 @@ if __name__ == "__main__":
     R += rainfall.dam_matrix()
 
     D += R[0, :, :]  # update the depth
-    depth[time, :, :] = D
+    depth[0, :, :] = D
     L = S + D  # initialize L as the sum of S and D
 
     print("Number of time steps: " + str(R.shape[0]))
 
-    for time in range(1, len(time_list)):
-        print(f'I am at time step {time}')
+    for t in range(1, len(time_list)):
+        print(f'I am at time step {t}')
         I, ibabawas, idadagdag = update_D(L, D, I, m, n, man, delta_X, tol, A, delta_t, delta_e)
         D = D - (ibabawas/A) + (idadagdag/A)
 
-        depth[time, :, :] = D
-        D += R[time, :, :]
+        depth[t, :, :] = D
+        D += R[t, :, :]
         L = S + D
 
     output_dataset.close()
