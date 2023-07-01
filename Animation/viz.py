@@ -2,9 +2,9 @@ import datetime
 
 #INPUT START AND END DATE/TIME
 #FOR DATE/TIME USED SINGLE DIGIT FOR SINGLE NUMBER (i.e 4 NOT 04)
-start_date='2020:11:08' #'yyyy:m:d' 
+start_date='2020:11:07' #'yyyy:m:d' 
 end_date='2020:11:14'
-start_time='2:0:0' #'h:m:s'
+start_time='23:0:0' #'h:m:s'
 end_time='23:0:0'
 
 #PARSING INPUT DATE/TIME
@@ -30,7 +30,7 @@ def set_raster_renderer_to_singleband(layer: QgsRasterLayer, band: int = 1) -> N
     #renderer: QgsSingleBandGrayRenderer = QgsSingleBandGrayRenderer(layer.dataProvider(), band)
 
     stats: QgsRasterBandStats = provider.bandStatistics(band, QgsRasterBandStats.All, layer.extent(), 0)
-    min_val = max(stats.minimumValue, 0)
+    min_val = 0.001
     max_val = max(stats.maximumValue, 0)
 
     # enhancement = QgsContrastEnhancement(renderer.dataType(band))
@@ -41,8 +41,10 @@ def set_raster_renderer_to_singleband(layer: QgsRasterLayer, band: int = 1) -> N
 
     fcn = QgsColorRampShader(minimumValue = min_val, maximumValue = max_val)
     fcn.setColorRampType(QgsColorRampShader.Interpolated)
-    lst = [ QgsColorRampShader.ColorRampItem(min_val, QColor(255,0,0,0)), \
-    QgsColorRampShader.ColorRampItem(max_val, QColor(255,0,0)) ]
+    lst = [ QgsColorRampShader.ColorRampItem(0, QColor(0,176,240, 0)), \
+            QgsColorRampShader.ColorRampItem(min_val, QColor(0,176,240, 60)), \
+            QgsColorRampShader.ColorRampItem(2.000, QColor(20,0,164,60)), \
+            QgsColorRampShader.ColorRampItem(max_val, QColor(20,0,164,60)) ]
     fcn.setColorRampItemList(lst)
     
     shader = QgsRasterShader()
