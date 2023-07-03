@@ -23,6 +23,16 @@ The `gdal` library requires a special installation that does not follow the conv
 ## Running the Script
 Only the `main.py` script must be run to generate the output files. The remaining Python files (`camodel.py` and `rainfall.py`) contain the necessary auxiliary functions for the simulation, and are imported to `main.py`. To produce the output of this simulation, one can enter the following command at the terminal/command prompt:
 ```
-python main.py path_to_tif_input_file.tif
+python main.py path_to_tif_input_file.tif directory/containing/rainfall_tiff_files 60
 ```
-where `path_to_tif_input_file` indicates the current path of the TIF file input. Once the script finishes, a `output_dataset.nc` must be present at your current working directory. 
+where...
+1. `path_to_tif_input_file` indicates the current path of the TIF file input. 
+2. `directory/containing/rainfall_tiff_files` refers to the directory where the TIFF files of the rainfall distribution images per time are stored
+3. `60` refers to the number of minutes that serve as the *timestep* of the simulation. It must be noted that this number must divide 180 in this particular case.
+
+For instance,
+```
+python3 main.py sample_dem.tif data/rainfall 90
+```
+
+Once the script finishes, a `output_dataset.nc` must be present at your current working directory. 
